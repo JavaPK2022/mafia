@@ -1,16 +1,113 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.DialogPane?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+<?import javafx.scene.text.Text?>
 
-<?import javafx.scene.control.Button?>
-<VBox alignment="CENTER" spacing="20.0" xmlns:fx="http://javafx.com/fxml"
-      fx:controller="com.example.mafiaclient.HelloController">
-    <padding>
-        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0"/>
-    </padding>
 
-    <Label fx:id="welcomeText"/>
-    <Button text="Hello!" onAction="#onHelloButtonClick"/>
-</VBox>
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="820.0" style="-fx-background-color: white;" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1">
+    <top>
+        <DialogPane prefHeight="75.0" prefWidth="784.0" BorderPane.alignment="CENTER">
+            <header>
+                <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Title" textAlignment="CENTER" wrappingWidth="801.6414737701416">
+                    <font>
+                        <Font name="Arial" size="26.0" />
+                    </font>
+                </Text>
+            </header>
+            <content>
+                <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Game information">
+                    <font>
+                        <Font name="Arial" size="15.0" />
+                    </font>
+                </Text>
+            </content>
+            <padding>
+                <Insets left="10.0" top="5.0" />
+            </padding>
+        </DialogPane>
+    </top>
+    <right>
+        <ScrollPane prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+            <content>
+                <VBox prefHeight="450.0" prefWidth="198.0">
+                    <children>
+                        <DialogPane prefHeight="54.0" prefWidth="198.0">
+                            <header>
+                                <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Username">
+                                    <font>
+                                        <Font name="Arial" size="15.0" />
+                                    </font>
+                                </Text>
+                            </header>
+                            <content>
+                                <Text strokeType="OUTSIDE" strokeWidth="0.0" text="User info (other player)">
+                                    <font>
+                                        <Font name="Arial" size="12.0" />
+                                    </font>
+                                </Text>
+                            </content>
+                        </DialogPane>
+                    </children>
+                </VBox>
+            </content>
+        </ScrollPane>
+    </right>
+    <bottom>
+        <DialogPane prefHeight="74.0" prefWidth="600.0" BorderPane.alignment="CENTER">
+            <header>
+                <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Username">
+                    <font>
+                        <Font name="Arial" size="24.0" />
+                    </font>
+                </Text>
+            </header>
+            <content>
+                <Text strokeType="OUTSIDE" strokeWidth="0.0" text="User info">
+                    <font>
+                        <Font name="Arial" size="15.0" />
+                    </font>
+                </Text>
+            </content>
+            <padding>
+                <Insets left="10.0" top="5.0" />
+            </padding>
+        </DialogPane>
+    </bottom>
+    <left>
+        <ImageView fitHeight="150.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true" BorderPane.alignment="CENTER">
+            <image>
+                <Image url="@../../../logo.png" />
+            </image>
+        </ImageView>
+    </left>
+    <center>
+        <SplitPane dividerPositions="0.7896174863387979" orientation="VERTICAL" prefHeight="200.0" prefWidth="160.0" BorderPane.alignment="CENTER">
+            <items>
+                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="191.0" prefWidth="198.0">
+                    <children>
+                        <ScrollPane prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                            <content>
+                                <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="350.0" prefWidth="466.0" snapToPixel="false" />
+                            </content>
+                        </ScrollPane>
+                    </children>
+                </AnchorPane>
+                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="68.0" prefWidth="198.0">
+                    <children>
+                        <TextArea prefHeight="78.0" prefWidth="371.0" promptText="enter message..." AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                    </children>
+                </AnchorPane>
+            </items>
+        </SplitPane>
+    </center>
+</BorderPane>
