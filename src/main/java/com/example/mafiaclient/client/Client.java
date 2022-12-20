@@ -1,17 +1,31 @@
-package com.example.mafiaclient;
+package com.example.mafiaclient.client;
 
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.Socket;
 
 public class Client {
     private Socket socket;
     private PrintWriter out;
     private BufferedReader in;
+    private InetAddress ipAddress;
     private WaitForServer waitForServer = new WaitForServer();
+    private DatagramSocket datagramSocket = new DatagramSocket();
+    private PlayerChat playerChat;
+
+    public Client(String ip, int port) throws IOException {
+        ipAddress = InetAddress.getByName("localhost");
+        playerChat = new PlayerChat();
+        playerChat.start();
+        System.out.println("client start");
+        //startConnection(ip, port);
+    }
 
     public void startConnection(String ip, int port) throws IOException {
         socket = new Socket(ip, port);
@@ -21,7 +35,15 @@ public class Client {
     }
 
     public void sendMessageToChat(String msg) throws IOException {
-        out.println(msg);
+        playerChat.sendMessageToChat(msg);
+        /*
+        System.out.println("message "+msg);
+        byte[] buf = msg.getBytes();
+        DatagramPacket packet = new DatagramPacket(buf,buf.length, ipAddress,4444);
+        //System.out.println("message "+msg);
+        datagramSocket.send(packet);
+
+         */
     }
 
     public void stopConnection() throws IOException {

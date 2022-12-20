@@ -1,4 +1,4 @@
-package com.example.mafiaclient;
+package com.example.mafiaclient.client;
 
 import java.io.Serializable;
 

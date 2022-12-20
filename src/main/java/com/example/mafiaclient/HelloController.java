@@ -1,10 +1,12 @@
 package com.example.mafiaclient;
 
+import com.example.mafiaclient.client.Client;
+import com.example.mafiaclient.client.Player;
+import com.example.mafiaclient.server.Server;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.DialogPane;
-import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -15,6 +17,10 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,10 +42,20 @@ public class HelloController {
     private Button voteButton;
     @FXML
     private VBox playersList;
+    private Client client;//= new Client("127.0.0.1",4445);
 
 
     private List<DialogPane> playersDialog = new ArrayList<>();
     private int selectedPlayer = -1;
+
+   public HelloController() {
+       try {
+           client = new Client("127.0.0.1", 4445);
+       }catch (Exception e)
+       {
+
+       }
+   }
 
 
     public void sendChat(KeyEvent event)
@@ -50,6 +66,12 @@ public class HelloController {
             //TODO: change to sending it to the server via Client class
             System.out.println(text.substring(0,text.length()-1));
             enterChatTextArea.clear();
+            try {
+               client.sendMessageToChat(String.valueOf("01" + text.substring(0, text.length() - 1)));
+            }catch (Exception e)
+            {
+
+            }
         }
     }
 
