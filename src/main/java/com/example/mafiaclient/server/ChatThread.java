@@ -7,7 +7,7 @@ public class ChatThread extends Thread{
 
     private DatagramSocket socket = new DatagramSocket(4444);
     private InetAddress group;
-    private byte[] buf = new byte[512];
+    private byte[] buf;
 
 
     public ChatThread() throws SocketException, UnknownHostException {
@@ -16,10 +16,12 @@ public class ChatThread extends Thread{
 
     @Override
     public void run() {
-        DatagramPacket packet = new DatagramPacket(buf,buf.length);
+        DatagramPacket packet;
         System.out.println("chat thread start");
         while(true) {
             try {
+                buf = new byte[512];
+                packet =  new DatagramPacket(buf,buf.length);
                 socket.receive(packet);
                 String received = new String(packet.getData(), 0, packet.getLength());
                 System.out.println(received);

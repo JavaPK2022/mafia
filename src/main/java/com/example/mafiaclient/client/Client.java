@@ -1,6 +1,8 @@
 package com.example.mafiaclient.client;
 
 
+import com.example.mafiaclient.HelloController;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -19,9 +21,9 @@ public class Client {
     private DatagramSocket datagramSocket = new DatagramSocket();
     private PlayerChat playerChat;
 
-    public Client(String ip, int port) throws IOException {
+    public Client(String ip, int port, HelloController controller) throws IOException {
         ipAddress = InetAddress.getByName("localhost");
-        playerChat = new PlayerChat();
+        playerChat = new PlayerChat(controller);
         playerChat.start();
         System.out.println("client start");
         //startConnection(ip, port);

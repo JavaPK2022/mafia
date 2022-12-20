@@ -42,6 +42,9 @@ public class HelloController {
     private Button voteButton;
     @FXML
     private VBox playersList;
+
+    @FXML
+    private VBox chatView;
     private Client client;//= new Client("127.0.0.1",4445);
 
 
@@ -50,7 +53,7 @@ public class HelloController {
 
    public HelloController() {
        try {
-           client = new Client("127.0.0.1", 4445);
+           client = new Client("127.0.0.1", 4445,this);
        }catch (Exception e)
        {
 
@@ -67,7 +70,8 @@ public class HelloController {
             System.out.println(text.substring(0,text.length()-1));
             enterChatTextArea.clear();
             try {
-               client.sendMessageToChat(String.valueOf("01" + text.substring(0, text.length() - 1)));
+                //TODO: get player nick
+               client.sendMessageToChat(String.valueOf("01" + "nick: "+ text.substring(0, text.length() - 1)));
             }catch (Exception e)
             {
 
@@ -111,6 +115,16 @@ public class HelloController {
 
         playersList.getChildren().add(pane);
 
+    }
+
+    public void updateChat(String msg)
+    {
+        DialogPane pane = new DialogPane();
+        Text textContent = new Text();
+        textContent.setText(msg);
+        pane.setContent(textContent);
+
+        chatView.getChildren().add(pane);
     }
 
     public void testAddPlayer()

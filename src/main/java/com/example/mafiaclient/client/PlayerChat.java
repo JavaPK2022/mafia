@@ -1,5 +1,8 @@
 package com.example.mafiaclient.client;
 
+import com.example.mafiaclient.HelloController;
+import javafx.application.Platform;
+
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -11,10 +14,12 @@ public class PlayerChat extends Thread{
     private MulticastSocket multicastSocket = new MulticastSocket(4443);
     private DatagramSocket datagramSocket = new DatagramSocket();
     private InetAddress ipAddress = InetAddress.getByName("localhost");
+    private HelloController controller;
 
 
-    public PlayerChat() throws IOException {
+    public PlayerChat(HelloController controller) throws IOException {
         multicastSocket.joinGroup(InetAddress.getByName("230.0.0.0"));
+        this.controller = controller;
 
     }
 
@@ -36,6 +41,13 @@ public class PlayerChat extends Thread{
                 multicastSocket.receive(packet);
                 String received = new String(packet.getData(),0,packet.getLength());
                 System.out.println(received+" it works");
+                Platform.runLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        controller.updateChat(received);
+                    }
+                });
+
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
