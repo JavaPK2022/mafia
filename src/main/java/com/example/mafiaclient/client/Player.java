@@ -4,10 +4,10 @@ import java.io.Serializable;
 
 public class Player implements Serializable {
     private int ID;
-    private String role;
+    private RoleEnum role;
     private String nick;
 
-    public Player(int ID, String role, String nick) {
+    public Player(int ID, RoleEnum role, String nick) {
         this.ID = ID;
         this.role = role;
         this.nick = nick;
@@ -17,7 +17,7 @@ public class Player implements Serializable {
         return ID;
     }
 
-    public String getRole() {
+    public RoleEnum getRole() {
         return role;
     }
 

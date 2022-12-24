@@ -2,15 +2,10 @@ package com.example.mafiaclient.client;
 
 
 import com.example.mafiaclient.HelloController;
+import javafx.application.Platform;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.Socket;
+import java.io.*;
+import java.net.*;
 
 public class Client {
     private Socket socket;
@@ -20,16 +15,31 @@ public class Client {
     private WaitForServer waitForServer = new WaitForServer();
     private DatagramSocket datagramSocket = new DatagramSocket();
     private PlayerChat playerChat;
+    private Player player;
+    private MulticastSocket multicastSocket = new MulticastSocket(4442);
 
-    public Client(String ip, int port, HelloController controller) throws IOException {
+    public Client(String ip, int port, HelloController controller, Player player) throws IOException {
         ipAddress = InetAddress.getByName("localhost");
+        multicastSocket.joinGroup(InetAddress.getByName("230.0.0.0"));
+        this.player = player;
         playerChat = new PlayerChat(controller);
         playerChat.start();
         System.out.println("client start");
-        //startConnection(ip, port);
+        InitializationThread initializationThread = new InitializationThread(controller);
+        initializationThread.start();
+        startConnection(ip, port);
+
     }
 
     public void startConnection(String ip, int port) throws IOException {
+        System.out.println(player.toString());
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(baos);
+        oos.writeObject(player);
+        oos.close();
+        byte[] buf = baos.toByteArray();
+        DatagramPacket packet = new DatagramPacket(buf,buf.length,ipAddress,4446);
+        datagramSocket.send(packet);
         socket = new Socket(ip, port);
         out = new PrintWriter(socket.getOutputStream(), true);
         in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -85,6 +95,42 @@ public class Client {
         private void updateChat(String message)
         {
             System.out.println(message);
+        }
+    }
+
+    private class InitializationThread extends Thread{
+
+        private HelloController controller;
+
+        public InitializationThread(HelloController controller)
+        {
+            this.controller = controller;
+        }
+        @Override
+        public void run()
+        {
+            while (true)
+            {
+                byte[] buf = new byte[512];
+                DatagramPacket packet = new DatagramPacket(buf,buf.length);
+                try {
+                    multicastSocket.receive(packet);
+                    ByteArrayInputStream bais = new ByteArrayInputStream(packet.getData());
+                    ObjectInputStream ois = new ObjectInputStream(bais);
+                    Player player = (Player) ois.readObject();
+                    ois.close();
+                    Platform.runLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            controller.addPlayers(player);
+                        }
+                    });
+
+                } catch (IOException | ClassNotFoundException e) {
+                    throw new RuntimeException(e);
+                }
+
+            }
         }
     }
 

@@ -2,6 +2,7 @@ package com.example.mafiaclient;
 
 import com.example.mafiaclient.client.Client;
 import com.example.mafiaclient.client.Player;
+import com.example.mafiaclient.client.RoleEnum;
 import com.example.mafiaclient.server.Server;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
@@ -53,7 +54,8 @@ public class HelloController {
 
    public HelloController() {
        try {
-           client = new Client("127.0.0.1", 4445,this);
+           Player player = new Player(1,RoleEnum.NOT_INITIALIZED,"nickk");
+           client = new Client("127.0.0.1", 4445,this,player);
        }catch (Exception e)
        {
 
@@ -66,7 +68,6 @@ public class HelloController {
         if(event.getCode() == KeyCode.ENTER)
         {
             String text = enterChatTextArea.getText();
-            //TODO: change to sending it to the server via Client class
             System.out.println(text.substring(0,text.length()-1));
             enterChatTextArea.clear();
             try {
@@ -86,7 +87,7 @@ public class HelloController {
         textHeader.setText(player.getNick());
         pane.setHeader(textHeader);
         Text textContent = new Text();
-        textContent.setText(player.getRole());
+        textContent.setText(player.getRole().toString());
         pane.setContent(textContent);
         pane.setId(String.valueOf(playersDialog.size()));
         pane.setOnMouseClicked(event -> {
@@ -129,7 +130,7 @@ public class HelloController {
 
     public void testAddPlayer()
     {
-        addPlayers(new Player(1,"nick","role"));
+        addPlayers(new Player(1, RoleEnum.NOT_INITIALIZED,"nick"));
     }
 
 }
