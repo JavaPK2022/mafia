@@ -6,13 +6,14 @@ import javafx.application.Platform;
 
 import java.io.*;
 import java.net.*;
+import java.util.Base64;
 
 public class Client {
     private Socket socket;
     private PrintWriter out;
     private BufferedReader in;
     private InetAddress ipAddress;
-    private WaitForServer waitForServer = new WaitForServer();
+    private WaitForServer waitForServer;// = new WaitForServer();
     private DatagramSocket datagramSocket = new DatagramSocket();
     private PlayerChat playerChat;
     private Player player;
@@ -21,6 +22,7 @@ public class Client {
     public Client(String ip, int port, HelloController controller, Player player) throws IOException {
         ipAddress = InetAddress.getByName("localhost");
         multicastSocket.joinGroup(InetAddress.getByName("230.0.0.0"));
+        waitForServer = new WaitForServer(controller);
         this.player = player;
         playerChat = new PlayerChat(controller);
         playerChat.start();
@@ -43,6 +45,7 @@ public class Client {
         socket = new Socket(ip, port);
         out = new PrintWriter(socket.getOutputStream(), true);
         in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
         waitForServer.start();
     }
 
@@ -70,25 +73,53 @@ public class Client {
     }
 
     private class WaitForServer extends Thread{
+
+        private HelloController controller;
+
+        public WaitForServer(HelloController controller) {
+            this.controller = controller;
+        }
+
         @Override
-        public void run()
-        {
-            //server messages are strings starting with 2 number specifying the type of message
-            try {
-                String message = in.readLine();
-                String messageType = message.substring(0, 2);
+        public void run() {
+            while (true) {
+                //server messages are strings starting with 2 number specifying the type of message
+                try {
+                    String message = in.readLine();
+                    String messageType = message.substring(0, 2);
 
-                //TODO: add more cases
-                switch (messageType){
-                    case "01":
-                        updateChat(message.substring(2));
-                        break;
-                     default:
-                        break;
+                    //TODO: add more cases
+                    switch (messageType) {
+                        case "01":
+                            updateChat(message.substring(2));
+                            break;
+                        case "02":
+
+                            String onlyMessage = message.substring(2);
+                            System.out.println(onlyMessage);
+                            byte[] bytes = Base64.getDecoder().decode(onlyMessage);
+                            ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+                            ObjectInputStream ois = new ObjectInputStream(bais);
+                            Player receivedPlayer = (Player) ois.readObject();
+                            ois.close();
+                            Platform.runLater(new Runnable() {
+                                @Override
+                                public void run() {
+                                    controller.addPlayers(receivedPlayer);
+                                }
+                            });
+
+
+
+
+
+                        default:
+                            break;
+                    }
+
+                } catch (IOException | ClassNotFoundException e) {
+                    throw new RuntimeException(e);
                 }
-
-            } catch (IOException e) {
-                throw new RuntimeException(e);
             }
         }
 
