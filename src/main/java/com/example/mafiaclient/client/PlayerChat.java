@@ -4,6 +4,7 @@ import com.example.mafiaclient.HelloController;
 import javafx.application.Platform;
 
 import java.io.IOException;
+import java.io.InterruptedIOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -48,7 +49,9 @@ public class PlayerChat extends Thread{
                     }
                 });
 
-            } catch (IOException e) {
+            }catch(InterruptedIOException e){
+                return;
+            } catch(IOException e) {
                 throw new RuntimeException(e);
             }
 

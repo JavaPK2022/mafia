@@ -18,6 +18,7 @@ public class Client {
     private PlayerChat playerChat;
     private Player player;
     private MulticastSocket multicastSocket = new MulticastSocket(4442);
+    private InitializationThread initializationThread;
 
     public Client(String ip, int port, HelloController controller, Player player) throws IOException {
         ipAddress = InetAddress.getByName("localhost");
@@ -27,7 +28,7 @@ public class Client {
         playerChat = new PlayerChat(controller);
         playerChat.start();
         System.out.println("client start");
-        InitializationThread initializationThread = new InitializationThread(controller);
+        initializationThread = new InitializationThread(controller);
         initializationThread.start();
         startConnection(ip, port);
 
@@ -65,11 +66,17 @@ public class Client {
         in.close();
         out.close();
         socket.close();
+        multicastSocket.close();
+        datagramSocket.close();
     }
 
-    public void sendVote(int playerId)
+    public void sendVoteOrStartGame(int playerId)
     {
-        out.println(playerId);
+        //out.println(playerId);
+        if(playerId<0)
+        {
+            out.println("01StartGame");
+        }
     }
 
     private class WaitForServer extends Thread{
@@ -87,6 +94,8 @@ public class Client {
                 try {
                     String message = in.readLine();
                     String messageType = message.substring(0, 2);
+                    String onlyMessage = message.substring(2);
+                    System.out.println(onlyMessage);
 
                     //TODO: add more cases
                     switch (messageType) {
@@ -94,9 +103,6 @@ public class Client {
                             updateChat(message.substring(2));
                             break;
                         case "02":
-
-                            String onlyMessage = message.substring(2);
-                            System.out.println(onlyMessage);
                             byte[] bytes = Base64.getDecoder().decode(onlyMessage);
                             ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
                             ObjectInputStream ois = new ObjectInputStream(bais);
@@ -108,11 +114,28 @@ public class Client {
                                     controller.addPlayers(receivedPlayer);
                                 }
                             });
-
-
-
-
-
+                            break;
+                        case "03":
+                            Platform.runLater(new Runnable() {
+                                                  @Override
+                               public void run() {
+                                    controller.setHost();
+                               }
+                               }
+                            );
+                            break;
+                        case "04":
+                            playerChat.interrupt();
+                            initializationThread.interrupt();
+                            stopConnection();
+                            System.out.println("game already has started");
+                            Platform.runLater(new Runnable() {
+                                @Override
+                                public void run() {
+                                    controller.exitGameAlert();
+                                }
+                            });
+                            return;
                         default:
                             break;
                     }
@@ -157,7 +180,10 @@ public class Client {
                         }
                     });
 
-                } catch (IOException | ClassNotFoundException e) {
+                }catch (InterruptedIOException e){
+                    return;
+                }
+                catch (IOException | ClassNotFoundException e) {
                     throw new RuntimeException(e);
                 }
 

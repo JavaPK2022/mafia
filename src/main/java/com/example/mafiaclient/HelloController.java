@@ -4,11 +4,10 @@ import com.example.mafiaclient.client.Client;
 import com.example.mafiaclient.client.Player;
 import com.example.mafiaclient.client.RoleEnum;
 import com.example.mafiaclient.server.Server;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
-import javafx.scene.control.Button;
-import javafx.scene.control.DialogPane;
-import javafx.scene.control.TextArea;
+import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Background;
@@ -24,6 +23,7 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class HelloController {
     /*
@@ -48,6 +48,8 @@ public class HelloController {
     private VBox chatView;
     private Client client;//= new Client("127.0.0.1",4445);
 
+    private boolean isHost = false;
+
 
     private List<DialogPane> playersDialog = new ArrayList<>();
     private int selectedPlayer = -1;
@@ -60,6 +62,12 @@ public class HelloController {
        {
 
        }
+   }
+
+   public void setHost()
+   {
+       isHost = true;
+       voteButton.setText("Start game");
    }
 
 
@@ -128,9 +136,34 @@ public class HelloController {
         chatView.getChildren().add(pane);
     }
 
+    public void startOrVote()
+    {
+        if(isHost) {
+            client.sendVoteOrStartGame(-1);
+            isHost = false;
+            voteButton.setText("Vote Unavailable");
+        }
+    }
+
     public void testAddPlayer()
     {
         addPlayers(new Player(1, RoleEnum.NOT_INITIALIZED,"nick"));
+    }
+
+    public void exitGameAlert()
+    {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Game started");
+        alert.setHeaderText(null);
+        alert.setContentText("The game has already started. You cannot join");
+
+        ButtonType closeButton = new ButtonType("Close app");
+        alert.getButtonTypes().setAll(closeButton);
+
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.isPresent() && result.get() == closeButton) {
+            Platform.exit();
+        }
     }
 
 }

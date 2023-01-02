@@ -5,6 +5,7 @@ import com.example.mafiaclient.client.Player;
 import java.io.*;
 import java.net.*;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Server {
 
@@ -12,6 +13,7 @@ public class Server {
     private InetAddress group;
     private DatagramSocket datagramSocket = new DatagramSocket(4446);
     private ServerSocket socket = new ServerSocket(4445);
+    private AtomicBoolean gameStarted = new AtomicBoolean(false);
 
 
     public Server() throws IOException {
@@ -35,6 +37,11 @@ public class Server {
                 try {
                     datagramSocket.receive(packet);
                     Socket clientSocket = socket.accept();
+                    if(gameStarted.get())
+                    {
+                        gameAlreadyHasStartedException(clientSocket);
+                        continue;
+                    }
                     ServerThread serverThread = new ServerThread(clientSocket);
                     serverThread.start();
                     ByteArrayInputStream bais = new ByteArrayInputStream(packet.getData());
@@ -54,6 +61,12 @@ public class Server {
         }
     }
 
+    private void gameAlreadyHasStartedException(Socket socket) throws IOException {
+        PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+        BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        out.println("04GameAlreadyHasStarted");
+    }
+
     private class ServerThread extends Thread{
 
         private PrintWriter out;// = new PrintWriter(clientSocket.getOutputStream(), true);
@@ -69,8 +82,10 @@ public class Server {
         public void run()
         {
             synchronized (playersList) {
+                int size = 0;
                 Iterator<Player> iterator = playersList.iterator();
                 while(iterator.hasNext()) {
+                    size++;
                     Player player = iterator.next();
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
                     try {
@@ -86,6 +101,31 @@ public class Server {
                         throw new RuntimeException(e);
                     }
 
+                }
+
+                if(size==0)
+                {
+                    out.println("03fistPlayer");
+                    System.out.println("fist player");
+                }
+            }
+
+            while (true)
+            {
+                try {
+                    String messageFromClient = in.readLine();
+                    String messageType = messageFromClient.substring(0,2);
+                    switch (messageType)
+                    {
+                        case "01":
+                            gameStarted.set(true);
+                            return;
+                        default:
+                            break;
+                    }
+
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
                 }
             }
 
