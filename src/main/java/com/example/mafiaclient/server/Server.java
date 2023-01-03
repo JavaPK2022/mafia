@@ -42,7 +42,7 @@ public class Server {
                     if(gameStarted.get())
                     {
                         gameAlreadyHasStartedException(clientSocket);
-                        break;
+                        continue;
                     }
                     ServerThread serverThread = new ServerThread(clientSocket);
                     serverThread.start();
@@ -58,6 +58,8 @@ public class Server {
                     byte[] bufSend = packet.getData();
                     packet = new DatagramPacket(bufSend, bufSend.length,group,4442);
                     datagramSocket.send(packet);
+                    //PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+                    //out.println("06");
                 } catch (IOException | ClassNotFoundException e) {
                     e.printStackTrace();
                     throw new RuntimeException(e);

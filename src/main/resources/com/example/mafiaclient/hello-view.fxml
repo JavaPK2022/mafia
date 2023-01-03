@@ -37,9 +37,9 @@
         </DialogPane>
     </top>
     <bottom>
-        <DialogPane prefHeight="74.0" prefWidth="600.0" BorderPane.alignment="CENTER">
+        <DialogPane fx:id="userInfoPane" prefHeight="74.0" prefWidth="600.0" BorderPane.alignment="CENTER">
             <header>
-                <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Username">
+                <Text fx:id="userInfoPaneHeader" strokeType="OUTSIDE" strokeWidth="0.0" text="Username">
                     <font>
                         <Font name="Arial" size="24.0" />
                     </font>
@@ -91,7 +91,7 @@
                <children>
                   <ScrollPane prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                      <content>
-                        <VBox fx:id="playersList" prefHeight="396.0" prefWidth="155.0" />
+                        <VBox fx:id="playersListVbox" prefHeight="396.0" prefWidth="155.0" />
 
           
        

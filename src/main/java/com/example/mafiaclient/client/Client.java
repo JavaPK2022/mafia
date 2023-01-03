@@ -141,6 +141,12 @@ public class Client {
                         case "05":
                             player.setID(Integer.parseInt(onlyMessage));
                             System.out.println("My new ID is "+onlyMessage);
+                            Platform.runLater(new Runnable() {
+                                @Override
+                                public void run() {
+                                    controller.setNickText(player);
+                                }
+                            });
                             break;
                         default:
                             break;

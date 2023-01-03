@@ -3,7 +3,6 @@ package com.example.mafiaclient;
 import com.example.mafiaclient.client.Client;
 import com.example.mafiaclient.client.Player;
 import com.example.mafiaclient.client.RoleEnum;
-import com.example.mafiaclient.server.Server;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
@@ -18,13 +17,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.SocketException;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public class HelloController {
     /*
@@ -43,10 +36,16 @@ public class HelloController {
     @FXML
     private Button voteButton;
     @FXML
-    private VBox playersList;
+    private VBox playersListVbox;
 
     @FXML
     private VBox chatView;
+
+    @FXML
+    private DialogPane userInfoPane;
+
+    @FXML
+    private Text userInfoPaneHeader;
     private Client client;//= new Client("127.0.0.1",4445);
 
     private boolean isHost = false;
@@ -54,6 +53,9 @@ public class HelloController {
 
     private List<DialogPane> playersDialog = new ArrayList<>();
     private int selectedPlayer = -1;
+
+    private Player player;
+    private Map<Player,DialogPane> playerList = new HashMap<>();
 
    public HelloController() {
        try {
@@ -80,7 +82,9 @@ public class HelloController {
            if (result.isPresent()) {
                if(result.get() == okButton) {
                    String nickname = textField.getText();
-                   Player player = new Player(1, RoleEnum.WAITING, nickname);
+                   //userInfoPane.setHeaderText(nickname);
+                   //userInfoPaneHeader.setText(nickname);
+                   player = new Player(1, RoleEnum.WAITING, nickname);
                    client = new Client("127.0.0.1", 4445, this, player);
                }else if(result.get() == ButtonType.CANCEL || result.get() == ButtonType.CLOSE)
                {
@@ -98,6 +102,14 @@ public class HelloController {
    {
        isHost = true;
        voteButton.setText("Start game");
+   }
+
+   public void setNickText(Player player)
+   {
+       this.player = player;
+       //userInfoPane.setHeaderText(player.getNick());
+       userInfoPaneHeader.setText(player.getNick());
+       System.out.println("new nick is "+player.getNick());
    }
 
 
@@ -120,6 +132,7 @@ public class HelloController {
 
     public void addPlayers(Player player)
     {
+
         DialogPane pane = new DialogPane();
         Text textHeader = new Text();
         textHeader.setText(player.getNick());
@@ -152,7 +165,8 @@ public class HelloController {
 
         playersDialog.add(pane);
 
-        playersList.getChildren().add(pane);
+        playersListVbox.getChildren().add(pane);
+        playerList.put(player,pane);
 
     }
 
@@ -187,11 +201,12 @@ public class HelloController {
         alert.setHeaderText(null);
         alert.setContentText("The game has already started. You cannot join");
 
-        ButtonType closeButton = new ButtonType("Close app");
-        alert.getButtonTypes().setAll(closeButton);
+        alert.getButtonTypes().setAll(ButtonType.CLOSE);
 
         Optional<ButtonType> result = alert.showAndWait();
-        if (result.isPresent() && result.get() == closeButton) {
+        if (result.isPresent())
+        {
+            System.out.println("Exit app");
             Platform.exit();
         }
     }
