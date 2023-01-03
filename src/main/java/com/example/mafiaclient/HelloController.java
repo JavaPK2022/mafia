@@ -7,6 +7,7 @@ import com.example.mafiaclient.server.Server;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -56,8 +57,37 @@ public class HelloController {
 
    public HelloController() {
        try {
-           Player player = new Player(1,RoleEnum.NOT_INITIALIZED,"nickk");
-           client = new Client("127.0.0.1", 4445,this,player);
+           Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+           alert.setTitle("Welcome");
+           alert.setHeaderText(null);
+
+
+           TextField textField = new TextField();
+           textField.setPromptText("Please enter your nick");
+           alert.getDialogPane().setContent(textField);
+
+           ButtonType okButton = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+           alert.getButtonTypes().setAll(okButton, ButtonType.CANCEL);
+
+           Node okButtonNode = alert.getDialogPane().lookupButton(okButton);
+           okButtonNode.setDisable(true);
+
+           textField.textProperty().addListener((observable, oldValue, newValue) -> {
+               okButtonNode.setDisable(newValue.trim().isEmpty());
+           });
+
+           Optional<ButtonType> result = alert.showAndWait();
+           if (result.isPresent()) {
+               if(result.get() == okButton) {
+                   String nickname = textField.getText();
+                   Player player = new Player(1, RoleEnum.WAITING, nickname);
+                   client = new Client("127.0.0.1", 4445, this, player);
+               }else if(result.get() == ButtonType.CANCEL || result.get() == ButtonType.CLOSE)
+               {
+                   Platform.exit();
+               }
+           }
+
        }catch (Exception e)
        {
 

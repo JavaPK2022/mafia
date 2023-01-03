@@ -18,14 +18,14 @@
     <top>
         <DialogPane prefHeight="75.0" prefWidth="784.0" BorderPane.alignment="CENTER">
             <header>
-                <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Title" textAlignment="CENTER" wrappingWidth="801.6414737701416">
+                <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Starting Game" textAlignment="CENTER" wrappingWidth="801.6414737701416">
                     <font>
                         <Font name="Arial" size="26.0" />
                     </font>
                 </Text>
             </header>
             <content>
-                <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Game information">
+                <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Wait for the host to start the game">
                     <font>
                         <Font name="Arial" size="15.0" />
                     </font>
@@ -46,7 +46,7 @@
                 </Text>
             </header>
             <content>
-                <Text strokeType="OUTSIDE" strokeWidth="0.0" text="User info">
+                <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Wait for the host to start the game to get your class">
                     <font>
                         <Font name="Arial" size="15.0" />
                     </font>

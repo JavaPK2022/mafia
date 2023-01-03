@@ -24,4 +24,8 @@ public class Player implements Serializable {
     public String getNick() {
         return nick;
     }
+
+    public void setID(int ID) {
+        this.ID = ID;
+    }
 }

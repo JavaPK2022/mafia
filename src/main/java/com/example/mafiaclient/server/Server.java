@@ -14,6 +14,7 @@ public class Server {
     private DatagramSocket datagramSocket = new DatagramSocket(4446);
     private ServerSocket socket = new ServerSocket(4445);
     private AtomicBoolean gameStarted = new AtomicBoolean(false);
+    private int playerCount = 0;
 
 
     public Server() throws IOException {
@@ -25,6 +26,7 @@ public class Server {
     }
 
 
+    //waits for new players
     private class InitializationThread extends Thread
     {
         @Override
@@ -40,7 +42,7 @@ public class Server {
                     if(gameStarted.get())
                     {
                         gameAlreadyHasStartedException(clientSocket);
-                        continue;
+                        break;
                     }
                     ServerThread serverThread = new ServerThread(clientSocket);
                     serverThread.start();
@@ -49,7 +51,10 @@ public class Server {
                     Player player = (Player) ois.readObject();
                     ois.close();
                     System.out.println(player.toString());
+                    player.setID(playerCount);
+                    playerCount++;
                     playersList.add(player);
+                    System.out.println("player ID is "+player.getID());
                     byte[] bufSend = packet.getData();
                     packet = new DatagramPacket(bufSend, bufSend.length,group,4442);
                     datagramSocket.send(packet);
@@ -103,6 +108,9 @@ public class Server {
 
                 }
 
+                out.println("05"+size);
+
+
                 if(size==0)
                 {
                     out.println("03fistPlayer");
@@ -119,7 +127,7 @@ public class Server {
                     {
                         case "01":
                             gameStarted.set(true);
-                            return;
+                            break;
                         default:
                             break;
                     }

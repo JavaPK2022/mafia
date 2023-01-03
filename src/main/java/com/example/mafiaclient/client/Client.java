@@ -51,7 +51,8 @@ public class Client {
     }
 
     public void sendMessageToChat(String msg) throws IOException {
-        playerChat.sendMessageToChat(msg);
+        if(!playerChat.isInterrupted())
+            playerChat.sendMessageToChat(msg);
         /*
         System.out.println("message "+msg);
         byte[] buf = msg.getBytes();
@@ -66,6 +67,7 @@ public class Client {
         in.close();
         out.close();
         socket.close();
+        playerChat.interrupt();
         multicastSocket.close();
         datagramSocket.close();
     }
@@ -136,6 +138,10 @@ public class Client {
                                 }
                             });
                             return;
+                        case "05":
+                            player.setID(Integer.parseInt(onlyMessage));
+                            System.out.println("My new ID is "+onlyMessage);
+                            break;
                         default:
                             break;
                     }
@@ -184,6 +190,8 @@ public class Client {
                     return;
                 }
                 catch (IOException | ClassNotFoundException e) {
+                    if(this.isInterrupted())
+                        System.out.println("User tried to connect to the closed game");
                     throw new RuntimeException(e);
                 }
 

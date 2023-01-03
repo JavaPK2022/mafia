@@ -40,6 +40,8 @@ public class PlayerChat extends Thread{
             DatagramPacket packet = new DatagramPacket(buf,buf.length);
             try {
                 multicastSocket.receive(packet);
+                if(this.isInterrupted())
+                    return;
                 String received = new String(packet.getData(),0,packet.getLength());
                 System.out.println(received+" it works");
                 Platform.runLater(new Runnable() {
