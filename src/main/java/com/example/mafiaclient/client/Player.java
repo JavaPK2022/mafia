@@ -28,4 +28,8 @@ public class Player implements Serializable {
     public void setID(int ID) {
         this.ID = ID;
     }
+
+    public void setRole(RoleEnum role) {
+        this.role = role;
+    }
 }

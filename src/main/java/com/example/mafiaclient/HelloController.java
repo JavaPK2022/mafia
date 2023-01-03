@@ -34,9 +34,16 @@ public class HelloController {
     @FXML
     private TextArea enterChatTextArea;
     @FXML
+    private Text titleText;
+    @FXML
     private Button voteButton;
     @FXML
     private VBox playersListVbox;
+
+    @FXML
+    private Text userInfoRole;
+    @FXML
+    private Text descriptionText;
 
     @FXML
     private VBox chatView;
@@ -55,7 +62,7 @@ public class HelloController {
     private int selectedPlayer = -1;
 
     private Player player;
-    private Map<Player,DialogPane> playerList = new HashMap<>();
+    private Map<Integer,DialogPane> dialogMap = new HashMap<>();
 
    public HelloController() {
        try {
@@ -121,8 +128,8 @@ public class HelloController {
             System.out.println(text.substring(0,text.length()-1));
             enterChatTextArea.clear();
             try {
-                //TODO: get player nick
-               client.sendMessageToChat(String.valueOf("01" + "nick: "+ text.substring(0, text.length() - 1)));
+
+               client.sendMessageToChat(String.valueOf("01" + player.getNick()+ text.substring(0, text.length() - 1)));
             }catch (Exception e)
             {
 
@@ -139,6 +146,7 @@ public class HelloController {
         pane.setHeader(textHeader);
         Text textContent = new Text();
         textContent.setText(player.getRole().toString());
+        textContent.setWrappingWidth(150);
         pane.setContent(textContent);
         pane.setId(String.valueOf(playersDialog.size()));
         pane.setOnMouseClicked(event -> {
@@ -166,7 +174,8 @@ public class HelloController {
         playersDialog.add(pane);
 
         playersListVbox.getChildren().add(pane);
-        playerList.put(player,pane);
+        dialogMap.put(player.getID(),pane);
+        System.out.println("Player id for pane is "+player.getID());
 
     }
 
@@ -182,7 +191,7 @@ public class HelloController {
 
     public void startOrVote()
     {
-        if(isHost) {
+        if(isHost && playersDialog.size()>=3) {
             client.sendVoteOrStartGame(-1);
             isHost = false;
             voteButton.setText("Vote Unavailable");
@@ -209,6 +218,39 @@ public class HelloController {
             System.out.println("Exit app");
             Platform.exit();
         }
+    }
+
+    public void updatePlayer(List<Player> playerList)
+    {
+
+        for(Player player : playerList)
+        {
+            if(player.getID() == this.player.getID())
+            {
+                this.player = player;
+                userInfoRole.setText("Your role is: "+player.getRole().toString());
+                break;
+            }
+        }
+
+        for(Player player : playerList)
+        {
+            DialogPane pane = dialogMap.get(player.getID());
+            Text textContent = new Text();
+            if(this.player.getRole() == RoleEnum.MAFIA || this.player.getID() == player.getID())
+            {
+                textContent.setText(player.getRole().toString());
+            }else {
+                textContent.setText("You cannot see this player's role");
+            }
+
+            textContent.setWrappingWidth(150);
+            pane.setContent(textContent);
+        }
+
+        titleText.setText("Day");
+        descriptionText.setText("It's time to chat");
+
     }
 
 }

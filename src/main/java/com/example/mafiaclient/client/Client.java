@@ -6,7 +6,9 @@ import javafx.application.Platform;
 
 import java.io.*;
 import java.net.*;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
 
 public class Client {
     private Socket socket;
@@ -19,6 +21,7 @@ public class Client {
     private Player player;
     private MulticastSocket multicastSocket = new MulticastSocket(4442);
     private InitializationThread initializationThread;
+    private List<Player> playerList = new ArrayList<>();
 
     public Client(String ip, int port, HelloController controller, Player player) throws IOException {
         ipAddress = InetAddress.getByName("localhost");
@@ -110,6 +113,7 @@ public class Client {
                             ObjectInputStream ois = new ObjectInputStream(bais);
                             Player receivedPlayer = (Player) ois.readObject();
                             ois.close();
+                            System.out.println("(out) Adding players with ID "+receivedPlayer.getID());
                             Platform.runLater(new Runnable() {
                                 @Override
                                 public void run() {
@@ -145,6 +149,22 @@ public class Client {
                                 @Override
                                 public void run() {
                                     controller.setNickText(player);
+                                }
+                            });
+                            break;
+                        case "06":
+                            byte[] bytesArray = Base64.getDecoder().decode(onlyMessage);
+                            bais = new ByteArrayInputStream(bytesArray);
+                            ois = new ObjectInputStream(bais);
+                            receivedPlayer = (Player) ois.readObject();
+                            ois.close();
+                            playerList.add(receivedPlayer);
+                            break;
+                        case "07":
+                            Platform.runLater(new Runnable() {
+                                @Override
+                                public void run() {
+                                    controller.updatePlayer(playerList);
                                 }
                             });
                             break;
@@ -185,6 +205,7 @@ public class Client {
                     ObjectInputStream ois = new ObjectInputStream(bais);
                     Player player = (Player) ois.readObject();
                     ois.close();
+                    System.out.println("(init) Adding player with ID "+player.getID());
                     Platform.runLater(new Runnable() {
                         @Override
                         public void run() {
