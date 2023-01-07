@@ -232,6 +232,9 @@ public class HelloController {
                 break;
             }
         }
+        //TODO - jesli detektyw oraz jest noc to mozesz podejrzec role jednego z graczy(ylko jednego!)
+        //TODO - boolean aby okreslic czy juz odkryles gracza w tej turze i restart jej co zmiane na noc
+        //TODO - podmienic button vote na odkrycie gracza gdy rola = detektyw i jest noc
 
         for(Player player : playerList)
         {

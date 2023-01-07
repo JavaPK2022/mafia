@@ -168,6 +168,8 @@ public class Client {
                                 }
                             });
                             break;
+                            //TODO - stop playerChat thread when its night and your role is not mafia, create a class to define whether it's day or night
+
                         default:
                             break;
                     }
