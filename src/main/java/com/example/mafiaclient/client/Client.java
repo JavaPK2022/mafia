@@ -2,6 +2,7 @@ package com.example.mafiaclient.client;
 
 
 import com.example.mafiaclient.HelloController;
+import com.example.mafiaclient.server.GameState;
 import javafx.application.Platform;
 
 import java.io.*;
@@ -22,6 +23,7 @@ public class Client {
     private MulticastSocket multicastSocket = new MulticastSocket(4442);
     private InitializationThread initializationThread;
     private List<Player> playerList = new ArrayList<>();
+    private GameState currentState;
 
     public Client(String ip, int port, HelloController controller, Player player) throws IOException {
         ipAddress = InetAddress.getByName("localhost");
@@ -44,7 +46,7 @@ public class Client {
         oos.writeObject(player);
         oos.close();
         byte[] buf = baos.toByteArray();
-        DatagramPacket packet = new DatagramPacket(buf,buf.length,ipAddress,4446);
+        DatagramPacket packet = new DatagramPacket(buf, buf.length, ipAddress, 4446);
         datagramSocket.send(packet);
         socket = new Socket(ip, port);
         out = new PrintWriter(socket.getOutputStream(), true);
@@ -54,8 +56,7 @@ public class Client {
     }
 
     public void sendMessageToChat(String msg) throws IOException {
-        if(!playerChat.isInterrupted())
-            playerChat.sendMessageToChat(msg);
+        if (!playerChat.isInterrupted()) playerChat.sendMessageToChat(msg);
         /*
         System.out.println("message "+msg);
         byte[] buf = msg.getBytes();
@@ -75,16 +76,14 @@ public class Client {
         datagramSocket.close();
     }
 
-    public void sendVoteOrStartGame(int playerId)
-    {
+    public void sendVoteOrStartGame(int playerId) {
         //out.println(playerId);
-        if(playerId<0)
-        {
+        if (playerId < 0) {
             out.println("01StartGame");
         }
     }
 
-    private class WaitForServer extends Thread{
+    private class WaitForServer extends Thread {
 
         private HelloController controller;
 
@@ -100,20 +99,20 @@ public class Client {
                     String message = in.readLine();
                     String messageType = message.substring(0, 2);
                     String onlyMessage = message.substring(2);
-                    System.out.println(onlyMessage);
+                    System.out.println("Client class - message only " +onlyMessage );
 
                     //TODO: add more cases
                     switch (messageType) {
-                        case "01":
+                        case "01": // chat update
                             updateChat(message.substring(2));
                             break;
-                        case "02":
+                        case "02": // add player
                             byte[] bytes = Base64.getDecoder().decode(onlyMessage);
                             ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
                             ObjectInputStream ois = new ObjectInputStream(bais);
                             Player receivedPlayer = (Player) ois.readObject();
                             ois.close();
-                            System.out.println("(out) Adding players with ID "+receivedPlayer.getID());
+                            System.out.println("(out) Adding players with ID " + receivedPlayer.getID());
                             Platform.runLater(new Runnable() {
                                 @Override
                                 public void run() {
@@ -121,16 +120,15 @@ public class Client {
                                 }
                             });
                             break;
-                        case "03":
+                        case "03": // ustaw jako host
                             Platform.runLater(new Runnable() {
-                                                  @Override
-                               public void run() {
+                                @Override
+                                public void run() {
                                     controller.setHost();
-                               }
-                               }
-                            );
+                                }
+                            });
                             break;
-                        case "04":
+                        case "04": //  w sumie idk
                             playerChat.interrupt();
                             initializationThread.interrupt();
                             stopConnection();
@@ -142,9 +140,9 @@ public class Client {
                                 }
                             });
                             return;
-                        case "05":
+                        case "05": // ustawienie id
                             player.setID(Integer.parseInt(onlyMessage));
-                            System.out.println("My new ID is "+onlyMessage);
+                            System.out.println("My new ID is " + onlyMessage);
                             Platform.runLater(new Runnable() {
                                 @Override
                                 public void run() {
@@ -152,7 +150,8 @@ public class Client {
                                 }
                             });
                             break;
-                        case "06":
+                        case "06": //
+                            System.out.println(" client case 6 game state "+ currentState.isNight());
                             byte[] bytesArray = Base64.getDecoder().decode(onlyMessage);
                             bais = new ByteArrayInputStream(bytesArray);
                             ois = new ObjectInputStream(bais);
@@ -168,7 +167,16 @@ public class Client {
                                 }
                             });
                             break;
-                            //TODO - stop playerChat thread when its night and your role is not mafia, create a class to define whether it's day or night
+                        //TODO - stop playerChat thread when its night and your role is not mafia, create a class to define whether it's day or night
+                        case "08":
+                            setState(onlyMessage);
+                            Platform.runLater(new Runnable() {
+                                @Override
+                                public void run() {
+                                    controller.updateState(currentState.isNight());
+                                }
+                            });
+                            break;
 
                         default:
                             break;
@@ -180,34 +188,40 @@ public class Client {
             }
         }
 
-        private void updateChat(String message)
-        {
+        private void setState(String onlyMessage) throws IOException, ClassNotFoundException {
+            byte[] receivedState = Base64.getDecoder().decode(onlyMessage);
+            ByteArrayInputStream stateBais= new ByteArrayInputStream(receivedState);
+            ObjectInputStream stateOis = new ObjectInputStream(stateBais);
+            currentState= (GameState) stateOis.readObject();
+            stateOis.close();
+            System.out.println("current state" + currentState.isNight());
+        }
+
+        private void updateChat(String message) {
             System.out.println(message);
         }
     }
 
-    private class InitializationThread extends Thread{
+    private class InitializationThread extends Thread {
 
         private HelloController controller;
 
-        public InitializationThread(HelloController controller)
-        {
+        public InitializationThread(HelloController controller) {
             this.controller = controller;
         }
+
         @Override
-        public void run()
-        {
-            while (true)
-            {
+        public void run() {
+            while (true) {
                 byte[] buf = new byte[512];
-                DatagramPacket packet = new DatagramPacket(buf,buf.length);
+                DatagramPacket packet = new DatagramPacket(buf, buf.length);
                 try {
                     multicastSocket.receive(packet);
                     ByteArrayInputStream bais = new ByteArrayInputStream(packet.getData());
                     ObjectInputStream ois = new ObjectInputStream(bais);
                     Player player = (Player) ois.readObject();
                     ois.close();
-                    System.out.println("(init) Adding player with ID "+player.getID());
+                    System.out.println("(init) Adding player with ID " + player.getID());
                     Platform.runLater(new Runnable() {
                         @Override
                         public void run() {
@@ -215,12 +229,10 @@ public class Client {
                         }
                     });
 
-                }catch (InterruptedIOException e){
+                } catch (InterruptedIOException e) {
                     return;
-                }
-                catch (IOException | ClassNotFoundException e) {
-                    if(this.isInterrupted())
-                        System.out.println("User tried to connect to the closed game");
+                } catch (IOException | ClassNotFoundException e) {
+                    if (this.isInterrupted()) System.out.println("User tried to connect to the closed game");
                     throw new RuntimeException(e);
                 }
 

@@ -10,13 +10,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Server {
 
-    private List<Player> playersList = Collections.synchronizedList(new ArrayList<Player>());
-    private List<ServerThread> serverThreadList = Collections.synchronizedList(new ArrayList<ServerThread>());
+    private final List<Player> playersList = Collections.synchronizedList(new ArrayList<Player>());
+    private final List<ServerThread> serverThreadList = Collections.synchronizedList(new ArrayList<ServerThread>());
     private InetAddress group;
-    private DatagramSocket datagramSocket = new DatagramSocket(4446);
-    private ServerSocket socket = new ServerSocket(4445);
+    private final DatagramSocket datagramSocket = new DatagramSocket(4446);
+    private final ServerSocket socket = new ServerSocket(4445);
     private AtomicBoolean gameStarted = new AtomicBoolean(false);
     private int playerCount = 0;
+    private final GameState gameState = new GameState();
 
 
     public Server() throws IOException {
@@ -46,25 +47,16 @@ public class Server {
                         gameAlreadyHasStartedException(clientSocket);
                         continue;
                     }
-                    ServerThread serverThread = new ServerThread(clientSocket);
-                    serverThreadList.add(serverThread);
-                    serverThread.start();
-                    ByteArrayInputStream bais = new ByteArrayInputStream(packet.getData());
-                    ObjectInputStream ois = new ObjectInputStream(bais);
-                    Player player = (Player) ois.readObject();
-                    ois.close();
-                    System.out.println(player.toString());
-                    player.setID(playerCount);
-                    playerCount++;
-                    playersList.add(player);
+                    addNewServerThread(clientSocket);
+
+                    Player player = getNewPlayer(packet);
+
+                    addNewPlayer(player);
+
+
                     System.out.println("player ID is "+player.getID());
 
-                    ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
-                    ObjectOutputStream objectStream = new ObjectOutputStream(byteStream);
-                    objectStream.writeObject(player);
-                    byte[] bufSend = byteStream.toByteArray();
-                    packet = new DatagramPacket(bufSend, bufSend.length,group,4442);
-                    datagramSocket.send(packet);
+                    sendNewPlayer(player);
                     //PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
                     //out.println("06");
                 } catch (IOException | ClassNotFoundException e) {
@@ -73,6 +65,40 @@ public class Server {
                 }
             }
         }
+
+        private void sendNewPlayer(Player player) throws IOException {
+            DatagramPacket packet;
+            ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+            ObjectOutputStream objectStream = new ObjectOutputStream(byteStream);
+            objectStream.writeObject(player);
+
+            byte[] bufSend = byteStream.toByteArray();
+            packet = new DatagramPacket(bufSend, bufSend.length,group,4442);
+            datagramSocket.send(packet);
+        }
+
+        private void addNewPlayer(Player player) {
+            playerCount++;
+            playersList.add(player);
+        }
+
+        private Player getNewPlayer(DatagramPacket packet) throws IOException, ClassNotFoundException {
+            ByteArrayInputStream bais = new ByteArrayInputStream(packet.getData());
+            ObjectInputStream ois = new ObjectInputStream(bais);
+            Player player = (Player) ois.readObject();
+            ois.close();
+            System.out.println(player.toString());
+            player.setID(playerCount);
+            return player;
+        }
+
+        private void addNewServerThread(Socket clientSocket) throws IOException {
+            ServerThread serverThread = new ServerThread(clientSocket);
+            serverThreadList.add(serverThread);
+            serverThread.start();
+        }
+
+
     }
 
     private void gameAlreadyHasStartedException(Socket socket) throws IOException {
@@ -114,9 +140,7 @@ public class Server {
 
         synchronized (playersList)
         {
-            Iterator<Player> iterator = playersList.iterator();
-            while (iterator.hasNext()){
-                Player player = iterator.next();
+            for (Player player : playersList) {
                 player.setRole(roleList.get(player.getID()));
                 staticPlayerList.add(player);
             }
@@ -124,10 +148,8 @@ public class Server {
 
         synchronized (serverThreadList)
         {
-            Iterator<ServerThread> iterator = serverThreadList.iterator();
-            while (iterator.hasNext()) {
-                ServerThread serverThread = iterator.next();
-                for(int i = 0; i<playerCount; i++) {
+            for (ServerThread serverThread : serverThreadList) {
+                for (int i = 0; i < playerCount; i++) {
                     serverThread.sendPlayerUpdate(staticPlayerList.get(i));
                 }
                 serverThread.finishPlayerUpdate();
@@ -140,8 +162,8 @@ public class Server {
 
     private class ServerThread extends Thread{
 
-        private PrintWriter out;// = new PrintWriter(clientSocket.getOutputStream(), true);
-        private BufferedReader in;// = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+        private final PrintWriter out;// = new PrintWriter(clientSocket.getOutputStream(), true);
+        private final BufferedReader in;// = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
         private Socket clientSocket;
 
         public ServerThread(Socket clientSocket) throws IOException {
@@ -152,30 +174,32 @@ public class Server {
         @Override
         public void run()
         {
-            synchronized (playersList) {
+            ByteArrayOutputStream gameStateOutputStreamBytes = new ByteArrayOutputStream();
+
+            synchronized (playersList) { //TODO to do rozsyłania
                 int size = 0;
-                Iterator<Player> iterator = playersList.iterator();
-                while(iterator.hasNext()) {
+                for (Player value : playersList) {
                     size++;
-                    Player player = iterator.next();
+                    Player player = value;
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
                     try {
-                        ObjectOutputStream oos = new ObjectOutputStream(baos);
-                        oos.writeObject(player);
-                        byte[] serializedPlayer = baos.toByteArray();
-                        System.out.println(String.valueOf("decoder "+Base64.getEncoder().encodeToString(serializedPlayer)));
-                        String serializedObject = baos.toString();
-                        System.out.println("string "+serializedObject);
-                        System.out.println("(sthread " + this.getName() +") Server sends player with ID "+player.getID());
-                        serializedObject = String.valueOf("02" + Base64.getEncoder().encodeToString(serializedPlayer));
-                        out.println(serializedObject);
+                        sendPlayer(player, baos);
+
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
 
+
                 }
 
                 out.println("05"+size);
+                try {
+                    sendGameState(gameStateOutputStreamBytes);
+
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
 
 
                 if(size==0)
@@ -184,6 +208,7 @@ public class Server {
                     System.out.println("fist player");
                 }
             }
+
 
             while (true)
             {
@@ -207,16 +232,36 @@ public class Server {
 
         }
 
+        private void sendPlayer(Player player, ByteArrayOutputStream baos) throws IOException {
+            ObjectOutputStream oos = new ObjectOutputStream(baos);
+            oos.writeObject(player);
+            byte[] serializedPlayer = baos.toByteArray();
+            System.out.println(String.valueOf("decoder "+Base64.getEncoder().encodeToString(serializedPlayer)));
+            String serializedObject = baos.toString();
+            System.out.println("string "+serializedObject);
+            System.out.println("(sthread " + this.getName() +") Server sends player with ID "+ player.getID());
+            serializedObject = String.valueOf("02" + Base64.getEncoder().encodeToString(serializedPlayer));
+            out.println(serializedObject);
+        }
+
+        private void sendGameState(ByteArrayOutputStream gameStateOutputStreamBytes) throws IOException {
+            System.out.println("send state");
+            ObjectOutputStream gameStateOutputStreamObject = new ObjectOutputStream(gameStateOutputStreamBytes);
+            gameStateOutputStreamObject.writeObject(gameState);
+            byte[] serializedGameState = gameStateOutputStreamBytes.toByteArray();
+            String serializedObject = String.valueOf("08" + Base64.getEncoder().encodeToString(serializedGameState));
+            out.println(serializedObject);
+        }
+
         public void sendPlayerUpdate(Player player)
         {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             try {
                 ObjectOutputStream oos = new ObjectOutputStream(baos);
                 oos.writeObject(player);
+
                 byte[] serializedPlayer = baos.toByteArray();
-                //System.out.println(String.valueOf("decoder "+Base64.getEncoder().encodeToString(serializedPlayer)));
                 String serializedObject;// = baos.toString();
-                //System.out.println("string "+serializedObject);
                 serializedObject = String.valueOf("06" + Base64.getEncoder().encodeToString(serializedPlayer));
                 out.println(serializedObject);
             } catch (IOException e) {
