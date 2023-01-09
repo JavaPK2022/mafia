@@ -56,6 +56,7 @@ public class HelloController {
     private Client client;//= new Client("127.0.0.1",4445);
 
     private boolean isHost = false;
+    private Boolean isNight;
 
 
     private List<DialogPane> playersDialog = new ArrayList<>();
@@ -137,6 +138,27 @@ public class HelloController {
         }
     }
 
+    public void updateChat(String msg)
+    {
+        System.out.println("Hello cotroller, update chat");
+
+        DialogPane pane = new DialogPane();
+        Text textContent = new Text();
+        textContent.setText(msg);
+        pane.setContent(textContent);
+
+        chatView.getChildren().add(pane);
+    }
+
+    public void startOrVote()
+    {
+        if(isHost && playersDialog.size()>=3) {
+            client.sendVoteOrStartGame(-1);
+            isHost = false;
+            voteButton.setText("Vote Unavailable");
+        }
+    }
+
     public void addPlayers(Player player)
     {
 
@@ -179,45 +201,9 @@ public class HelloController {
 
     }
 
-    public void updateChat(String msg)
-    {
-        DialogPane pane = new DialogPane();
-        Text textContent = new Text();
-        textContent.setText(msg);
-        pane.setContent(textContent);
-
-        chatView.getChildren().add(pane);
-    }
-
-    public void startOrVote()
-    {
-        if(isHost && playersDialog.size()>=3) {
-            client.sendVoteOrStartGame(-1);
-            isHost = false;
-            voteButton.setText("Vote Unavailable");
-        }
-    }
-
     public void testAddPlayer()
     {
         addPlayers(new Player(1, RoleEnum.NOT_INITIALIZED,"nick"));
-    }
-
-    public void exitGameAlert()
-    {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Game started");
-        alert.setHeaderText(null);
-        alert.setContentText("The game has already started. You cannot join");
-
-        alert.getButtonTypes().setAll(ButtonType.CLOSE);
-
-        Optional<ButtonType> result = alert.showAndWait();
-        if (result.isPresent())
-        {
-            System.out.println("Exit app");
-            Platform.exit();
-        }
     }
 
     public void updatePlayer(List<Player> playerList)
@@ -250,10 +236,41 @@ public class HelloController {
             textContent.setWrappingWidth(150);
             pane.setContent(textContent);
         }
+        setDayOrNight();
 
-        titleText.setText("Day");
         descriptionText.setText("It's time to chat");
 
+    }
+
+    private void setDayOrNight() {
+        if(isNight){
+            titleText.setText("Night");
+        }
+        else{
+            titleText.setText("Day");
+        }
+    }
+
+    public void updateState(Boolean isNight){
+       System.out.println("update state ");
+       this.isNight=isNight;
+       //setDayOrNight();
+    }
+    public void exitGameAlert()
+    {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Game started");
+        alert.setHeaderText(null);
+        alert.setContentText("The game has already started. You cannot join");
+
+        alert.getButtonTypes().setAll(ButtonType.CLOSE);
+
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.isPresent())
+        {
+            System.out.println("Exit app");
+            Platform.exit();
+        }
     }
 
 }
