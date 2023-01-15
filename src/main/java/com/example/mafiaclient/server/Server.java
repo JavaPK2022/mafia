@@ -153,7 +153,7 @@ public class Server {
                     serverThread.sendPlayerUpdate(staticPlayerList.get(i));
                 }
                 serverThread.finishPlayerUpdate();
-
+                //todo tutaj wysłać gamestate?
             }
         }
 
