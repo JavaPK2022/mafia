@@ -76,11 +76,15 @@ public class Client {
         datagramSocket.close();
     }
 
-    public void sendVoteOrStartGame(int playerId) {
+    public void startGame(int playerId) {
         //out.println(playerId);
         if (playerId < 0) {
             out.println("01StartGame");
         }
+    }
+
+    public void sendAction(PlayerAction action){
+        out.println("02 " + action);
     }
 
     private class WaitForServer extends Thread {

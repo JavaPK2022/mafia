@@ -24,5 +24,10 @@ public class PlayerAction {
     public void setTargetId(int targetId) {
         this.targetId = targetId;
     }
+
+    @Override
+    public String toString() {
+        return  clientId + " " + targetId;
+    }
 }
 

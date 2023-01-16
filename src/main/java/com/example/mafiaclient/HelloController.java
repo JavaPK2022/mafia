@@ -2,6 +2,7 @@ package com.example.mafiaclient;
 
 import com.example.mafiaclient.client.Client;
 import com.example.mafiaclient.client.Player;
+import com.example.mafiaclient.client.PlayerAction;
 import com.example.mafiaclient.client.RoleEnum;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -153,9 +154,12 @@ public class HelloController {
     public void startOrVote()
     {
         if(isHost && playersDialog.size()>=3) {
-            client.sendVoteOrStartGame(-1);
+            client.startGame(-1);
             isHost = false;
             voteButton.setText("Vote Unavailable");
+        }
+        else{
+            client.sendAction(new PlayerAction(1, 1)); //testowo
         }
     }
 
@@ -254,8 +258,17 @@ public class HelloController {
     public void updateState(Boolean isNight){
        System.out.println("update state ");
        this.isNight=isNight;
+       updateController();
        //setDayOrNight();
     }
+
+    private void updateController() {
+       if (!isNight){
+           voteButton.setText("Zagłosuj");
+
+       }
+    }
+
     public void exitGameAlert()
     {
         Alert alert = new Alert(Alert.AlertType.ERROR);
