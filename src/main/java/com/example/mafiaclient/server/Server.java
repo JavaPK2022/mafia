@@ -219,7 +219,6 @@ public class Server {
                 try {
                     String messageFromClient = in.readLine();
                     String messageType = messageFromClient.substring(0,2);
-                    String[] messageParts = messageFromClient.split(" ");
                     switch (messageType)
                     {
                         case "01":
@@ -228,6 +227,7 @@ public class Server {
                             sendGameState(gameStateOutputStreamBytes);
                             break;
                         case "02":
+                            String[] messageParts = messageFromClient.split(" ");
                             //sprawdzamy czy na pewno wartość z vote'a jest w aktywnych graczach
                             if (playersList.stream()
                                     .map(Player::getID).toList().contains(Integer.valueOf(messageParts[2]))) {

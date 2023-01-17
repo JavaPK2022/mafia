@@ -87,9 +87,21 @@ public class Client {
         }
     }
 
-    public void sendAction(PlayerAction action){
-        System.out.println("02 " + action);
-        out.println("02 " + action);
+    public boolean sendAction(PlayerAction action){
+        Player votedPlayer = player;
+        for (Player p:
+             playerList) {
+            if (action.getTargetId() == p.getID())
+                votedPlayer = p;
+        }
+        if (votedPlayer.getRole() == RoleEnum.MAFIA || votedPlayer.getRole() == RoleEnum.DETECTIVE
+        || votedPlayer.getRole() == RoleEnum.REGULAR ) {
+            System.out.println("02 " + action);
+            out.println("02 " + action);
+            return true;
+        }
+        else
+            return false;
     }
 
     private class WaitForServer extends Thread {

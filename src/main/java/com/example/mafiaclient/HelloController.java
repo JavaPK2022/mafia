@@ -165,10 +165,10 @@ public class HelloController {
             switch (possibleAction){
 
                 case VOTE -> {
-                    client.sendAction(new PlayerAction(player.getID(), selectedPlayer));
-                    possibleAction = PossibleAction.WAIT;
-                    voteButton.setText("Vote Unavailable");
-                }
+                    if (client.sendAction(new PlayerAction(player.getID(), selectedPlayer))) {
+                        possibleAction = PossibleAction.WAIT;
+                        voteButton.setText("Vote Unavailable");
+                    }}
                 case CHECK -> {
                     try {
                         if (popup(selectedPlayer)) {
@@ -296,7 +296,8 @@ public class HelloController {
         {
             DialogPane pane = dialogMap.get(player.getID());
             Text textContent = new Text();
-            if(this.player.getRole() == RoleEnum.MAFIA && player.getRole() == RoleEnum.MAFIA || this.player.getID() == player.getID())
+            if(this.player.getRole() == RoleEnum.MAFIA && player.getRole() == RoleEnum.MAFIA || this.player.getID() == player.getID()
+            || player.getRole() == RoleEnum.DECEASED)
             {
                 textContent.setText(player.getRole().toString());
             }else {
@@ -356,7 +357,6 @@ public class HelloController {
 
     private void checkState(){
        switch (player.getRole()){
-
            case MAFIA -> possibleAction = PossibleAction.VOTE;
            case DETECTIVE -> {
                if (isNight){
