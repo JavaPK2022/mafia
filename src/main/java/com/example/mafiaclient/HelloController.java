@@ -174,7 +174,7 @@ public class HelloController {
                     }}
                 case CHECK -> {
                     try {
-                        if (popup(selectedPlayer)) {
+                        if (checkPopup(selectedPlayer)) {
                             possibleAction = PossibleAction.WAIT;
                             voteButton.setText("Vote Unavailable");
                         }
@@ -188,7 +188,7 @@ public class HelloController {
         }
     }
 
-    private boolean popup(int selectedPlayer) throws IOException {
+    private boolean checkPopup(int selectedPlayer) throws IOException {
         //to
        /*FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("popup.fxml"));
         Scene scene = new Scene(fxmlLoader.load(), 200, 100);
@@ -211,6 +211,40 @@ public class HelloController {
             case REGULAR -> lbl.setTextFill(Color.web("Blue"));
             default -> {
                 return false;
+            }
+        }
+        hb.setSpacing(10);
+        hb.getChildren().add((lbl));
+        ((Group) scn.getRoot()).getChildren().add(hb);
+        stage.setScene(scn);
+        stage.show();
+        return true;
+    }
+
+    private boolean finishPopup(boolean mafiaWon) throws IOException {
+        Scene scn = new Scene(new Group());
+        Stage stage = new Stage();
+        stage.setTitle("Finish");
+        stage.setWidth(200);
+        stage.setHeight(100);
+        HBox hb = new HBox();
+        Label lbl;
+        if (mafiaWon){
+            lbl = new Label("Mafia has won.");
+            if (player.getRole() == RoleEnum.MAFIA){
+                lbl.setTextFill(Color.web("Green"));
+            }
+            else {
+                lbl.setTextFill(Color.web("Red"));
+            }
+        }
+        else {
+            lbl = new Label("Mafia has lost.");
+            if (player.getRole() == RoleEnum.MAFIA){
+                lbl.setTextFill(Color.web("Red"));
+            }
+            else {
+                lbl.setTextFill(Color.web("Green"));
             }
         }
         hb.setSpacing(10);
@@ -246,7 +280,7 @@ public class HelloController {
         pane.setId(String.valueOf(playersDialog.size()));
         translatePaneToPlayer.put(translationCounter,player.getID());
         translationCounter++;
-        pane.setOnMouseClicked(event -> {       //todo dodać wypisywanie.
+        pane.setOnMouseClicked(event -> {
             System.out.println(player.getID());
             if(selectedPlayer<0) {
                 pane.setBackground(new Background(
@@ -329,7 +363,7 @@ public class HelloController {
     }
 
     public void updateState(Boolean isNight){
-       System.out.println("update state ");
+       System.out.println("update state " + isNight);
        this.isNight=isNight;
        updateController();
        //setDayOrNight();
