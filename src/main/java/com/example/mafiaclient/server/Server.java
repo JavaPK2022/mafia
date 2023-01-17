@@ -180,6 +180,9 @@ public class Server {
         playerToRemove.setRole(RoleEnum.DECEASED);
         playersList.remove(playerToRemove);
         System.out.println("deleted player's id: "+playerToRemove.getID() +" "+playerToRemove.getNick());
+        System.out.println("game state1 "+gameState.isNight());
+        gameState.toggleState();
+        System.out.println("game state2 "+gameState.isNight());
         synchronized (serverThreadList)
         {
             for (ServerThread thread: serverThreadList)
@@ -187,10 +190,11 @@ public class Server {
                 //sprawdzamy kto ma najwiecej głosów
 
                 thread.checkForGameEnd();
-                gameState.toggleState();
+
                 //wysyłamy dane na temat stanu gry i martwego gracza
-                thread.sendGameState(gameStateOutputStreamBytes);
+                gameStateOutputStreamBytes = new ByteArrayOutputStream();
                 thread.sendPlayerUpdate2(playerToRemove);
+                thread.sendGameState(gameStateOutputStreamBytes);
             }
         }
     }

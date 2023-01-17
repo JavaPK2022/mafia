@@ -232,6 +232,13 @@ public class Client {
             currentState= (GameState) stateOis.readObject();
             stateOis.close();
             System.out.println("current state" + currentState.isNight());
+
+            Platform.runLater(new Runnable() {
+                @Override
+                public void run() {
+                    controller.updateState(currentState.isNight());
+                }
+            });
         }
 
         private void updateChat(String message) {

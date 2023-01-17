@@ -396,7 +396,7 @@ public class HelloController {
     }
 
     private void checkState(){
-
+        setDayOrNight();
         System.out.println("Player's role is "+ player.getRole());
        switch (player.getRole()){
            case MAFIA -> possibleAction = PossibleAction.VOTE;
