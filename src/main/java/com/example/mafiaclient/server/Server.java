@@ -225,6 +225,7 @@ public class Server {
                         case "01":
                             gameStarted.set(true);
                             drawPlayers();
+                            sendGameState(gameStateOutputStreamBytes);
                             break;
                         case "02":
                             //sprawdzamy czy na pewno wartość z vote'a jest w aktywnych graczach

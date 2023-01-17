@@ -88,6 +88,7 @@ public class Client {
     }
 
     public void sendAction(PlayerAction action){
+        System.out.println("02 " + action);
         out.println("02 " + action);
     }
 
