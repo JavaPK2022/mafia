@@ -17,6 +17,8 @@ public class Server {
     private final ServerSocket socket = new ServerSocket(4445);
     private AtomicBoolean gameStarted = new AtomicBoolean(false);
     private int playerCount = 0;
+    private int playersVoted = 0;
+    private Map<Integer, Integer> playerVoteMap = new HashMap<>();
     private final GameState gameState = new GameState();
 
 
@@ -210,17 +212,50 @@ public class Server {
             }
 
 
+
+
             while (true)
             {
                 try {
                     String messageFromClient = in.readLine();
                     String messageType = messageFromClient.substring(0,2);
+                    String[] messageParts = messageFromClient.split(" ");
                     switch (messageType)
                     {
                         case "01":
                             gameStarted.set(true);
                             drawPlayers();
                             break;
+                        case "02":
+                            //sprawdzamy czy na pewno wartość z vote'a jest w aktywnych graczach
+                            if (playersList.stream()
+                                    .map(Player::getID).toList().contains(Integer.valueOf(messageParts[2]))) {
+                                //jeśli nikt nie zagłosował jeszcze na gracza z danym ID to ustawiamy głos na jeden
+                                //jeśli ktoś już wcześniej zagłosował to zwiększamy liczbę głosów o 1
+                                playerVoteMap.merge( Integer.valueOf(messageParts[2]), 1, Integer::sum);
+                                playersVoted++;
+                                //jeśli liczba graczy którzy zagłosowali jest równa liczbie graczy dalej w grze
+                                //odrzucimy gracza z najweikszą liczbą głosów
+                                if (playersVoted == playersList.size()) {
+                                    //sprawdzamy kto ma najwiecej głosów
+                                    Optional<Map.Entry<Integer, Integer>> max = playerVoteMap.entrySet().stream()
+                                            .max(Map.Entry.comparingByValue());
+                                    Player playerToRemove = playersList.stream()
+                                            .filter(player -> player.getID() == max.get().getKey())
+                                            .findAny()
+                                            .orElse(null);
+                                    //usuwamy gracza i zerujemy odpowiednie pola
+                                    playersVoted = 0;
+                                    playerVoteMap = new HashMap<>();
+                                    playerToRemove.setRole(RoleEnum.DECEASED);
+                                    playersList.remove(playerToRemove);
+                                    checkForGameEnd();
+                                    gameState.toggleState();
+                                    //wysyłamy dane na temat stanu gry i martwego gracza
+                                    sendGameState(gameStateOutputStreamBytes);
+                                    sendPlayerUpdate(playerToRemove);
+                                }
+                            }
                         default:
                             break;
                     }
@@ -230,6 +265,24 @@ public class Server {
                 }
             }
 
+        }
+
+        private void checkForGameEnd() {
+            //TODO: zhandlowanie końca gry
+            //jeśli żaden gracz z mafii nie żyje to zrób coś
+            long mafiaAlivePlayers = playersList.stream()
+                    .map(Player::getRole)
+                    .filter(role -> role.equals(RoleEnum.MAFIA)).count();
+            if (mafiaAlivePlayers == 0) {
+                //???
+            }
+            //jak wyżej
+            long townAlivePlayers = playersList.stream()
+                    .map(Player::getRole)
+                    .filter(role -> role.equals(RoleEnum.DETECTIVE) || role.equals(RoleEnum.REGULAR)).count();
+            if (townAlivePlayers == 0) {
+                //???
+            }
         }
 
         private void sendPlayer(Player player, ByteArrayOutputStream baos) throws IOException {

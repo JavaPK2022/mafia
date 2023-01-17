@@ -7,17 +7,18 @@ import com.example.mafiaclient.client.RoleEnum;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
+import javafx.scene.Group;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundFill;
-import javafx.scene.layout.CornerRadii;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
+import javafx.stage.Stage;
 
+import java.io.IOException;
 import java.util.*;
 
 public class HelloController {
@@ -65,6 +66,8 @@ public class HelloController {
 
     private Player player;
     private Map<Integer,DialogPane> dialogMap = new HashMap<>();
+
+    private PossibleAction possibleAction;
 
    public HelloController() {
        try {
@@ -159,8 +162,71 @@ public class HelloController {
             voteButton.setText("Vote Unavailable");
         }
         else{
-            client.sendAction(new PlayerAction(1, 1)); //testowo
+            switch (possibleAction){
+
+                case VOTE -> {
+                    client.sendAction(new PlayerAction(player.getID(), selectedPlayer));
+                    possibleAction = PossibleAction.WAIT;
+                    voteButton.setText("Vote Unavailable");
+                }
+                case CHECK -> {
+                    try {
+                        if (popup(selectedPlayer)) {
+                            possibleAction = PossibleAction.WAIT;
+                            voteButton.setText("Vote Unavailable");
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+                case WAIT -> {
+                }
+            }
         }
+    }
+
+    private boolean popup(int selectedPlayer) throws IOException {
+        //to
+       /*FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("popup.fxml"));
+        Scene scene = new Scene(fxmlLoader.load(), 200, 100);
+        Stage stage = new Stage();
+        stage.setTitle("Mafia!");
+        stage.setScene(scene);
+        stage.show();*/
+        //albo to
+        RoleEnum role = playerRole(selectedPlayer);
+        Scene scn = new Scene(new Group());
+        Stage stage = new Stage();
+        stage.setTitle("Player role");
+        stage.setWidth(200);
+        stage.setHeight(100);
+        HBox hb = new HBox();
+        Label lbl = new Label(role.toString());
+        switch (role){
+
+            case MAFIA -> lbl.setTextFill(Color.web("Red"));
+            case REGULAR -> lbl.setTextFill(Color.web("Blue"));
+            default -> {
+                return false;
+            }
+        }
+        hb.setSpacing(10);
+        hb.getChildren().add((lbl));
+        ((Group) scn.getRoot()).getChildren().add(hb);
+        stage.setScene(scn);
+        stage.show();
+        return true;
+    }
+
+    private RoleEnum playerRole(int selectedPlayer) {
+       List<Player> players = client.getPlayerList();
+        for (Player player :
+                players) {
+            if (player.getID() == selectedPlayer){
+                return player.getRole();
+            }
+        }
+        return RoleEnum.NOT_INITIALIZED;
     }
 
     public void addPlayers(Player player)
@@ -175,7 +241,7 @@ public class HelloController {
         textContent.setWrappingWidth(150);
         pane.setContent(textContent);
         pane.setId(String.valueOf(playersDialog.size()));
-        pane.setOnMouseClicked(event -> {
+        pane.setOnMouseClicked(event -> {       //todo dodać wypisywanie.
             System.out.println(player.getID());
             if(selectedPlayer<0) {
                 pane.setBackground(new Background(
@@ -230,7 +296,7 @@ public class HelloController {
         {
             DialogPane pane = dialogMap.get(player.getID());
             Text textContent = new Text();
-            if(this.player.getRole() == RoleEnum.MAFIA || this.player.getID() == player.getID())
+            if(this.player.getRole() == RoleEnum.MAFIA && player.getRole() == RoleEnum.MAFIA || this.player.getID() == player.getID())
             {
                 textContent.setText(player.getRole().toString());
             }else {
@@ -263,9 +329,11 @@ public class HelloController {
     }
 
     private void updateController() {
-       if (!isNight){
-           voteButton.setText("Zagłosuj");
-
+       checkState();
+       switch (possibleAction){
+           case VOTE -> voteButton.setText("Vote");
+           case CHECK -> voteButton.setText("Check");
+           case WAIT -> voteButton.setText("Vote Unavailable");
        }
     }
 
@@ -286,4 +354,31 @@ public class HelloController {
         }
     }
 
+    private void checkState(){
+       switch (player.getRole()){
+
+           case MAFIA -> possibleAction = PossibleAction.VOTE;
+           case DETECTIVE -> {
+               if (isNight){
+                   possibleAction = PossibleAction.CHECK;
+               }
+               else {
+                   possibleAction = PossibleAction.VOTE;
+               }
+           }
+           case REGULAR -> {
+               if (isNight){
+                   possibleAction = PossibleAction.WAIT;
+               }
+               else {
+                   possibleAction = PossibleAction.VOTE;
+               }
+           }
+           default -> possibleAction = PossibleAction.WAIT;
+       }
+    }
+
+    private enum PossibleAction{
+       VOTE, CHECK, WAIT
+    }
 }

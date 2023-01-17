@@ -39,6 +39,10 @@ public class Client {
 
     }
 
+    public List<Player> getPlayerList() {
+        return playerList;
+    }
+
     public void startConnection(String ip, int port) throws IOException {
         System.out.println(player.toString());
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
