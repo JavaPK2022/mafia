@@ -166,6 +166,35 @@ public class Server {
 
     }
 
+    public void updateVotedPlayers(ByteArrayOutputStream gameStateOutputStreamBytes) throws IOException {
+
+        Optional<Map.Entry<Integer, Integer>> max = playerVoteMap.entrySet().stream()
+                .max(Map.Entry.comparingByValue());
+        Player playerToRemove = playersList.stream()
+                .filter(player -> player.getID() == max.get().getKey())
+                .findAny()
+                .orElse(null);
+        //usuwamy gracza i zerujemy odpowiednie pola
+        playersVoted = 0;
+        playerVoteMap = new HashMap<>();
+        playerToRemove.setRole(RoleEnum.DECEASED);
+        playersList.remove(playerToRemove);
+        System.out.println("deleted player's id: "+playerToRemove.getID() +" "+playerToRemove.getNick());
+        synchronized (serverThreadList)
+        {
+            for (ServerThread thread: serverThreadList)
+            {
+                //sprawdzamy kto ma najwiecej głosów
+
+                thread.checkForGameEnd();
+                gameState.toggleState();
+                //wysyłamy dane na temat stanu gry i martwego gracza
+                thread.sendGameState(gameStateOutputStreamBytes);
+                thread.sendPlayerUpdate2(playerToRemove);
+            }
+        }
+    }
+
     private class ServerThread extends Thread{
 
         private final PrintWriter out;// = new PrintWriter(clientSocket.getOutputStream(), true);
@@ -242,24 +271,7 @@ public class Server {
                                 //jeśli liczba graczy którzy zagłosowali jest równa liczbie graczy dalej w grze
                                 //odrzucimy gracza z najweikszą liczbą głosów
                                 if ((playersVoted == playersList.size()) ||(gameState.isNight() && playersVoted == mafiaCounter)) {
-                                    //sprawdzamy kto ma najwiecej głosów
-                                    Optional<Map.Entry<Integer, Integer>> max = playerVoteMap.entrySet().stream()
-                                            .max(Map.Entry.comparingByValue());
-                                    Player playerToRemove = playersList.stream()
-                                            .filter(player -> player.getID() == max.get().getKey())
-                                            .findAny()
-                                            .orElse(null);
-                                    //usuwamy gracza i zerujemy odpowiednie pola
-                                    playersVoted = 0;
-                                    playerVoteMap = new HashMap<>();
-                                    playerToRemove.setRole(RoleEnum.DECEASED);
-                                    playersList.remove(playerToRemove);
-                                    System.out.println("deleted player's id: "+playerToRemove.getID() +" "+playerToRemove.getNick());
-                                    checkForGameEnd();
-                                    gameState.toggleState();
-                                    //wysyłamy dane na temat stanu gry i martwego gracza
-                                    sendGameState(gameStateOutputStreamBytes);
-                                    sendPlayerUpdate2(playerToRemove);
+                                   updateVotedPlayers(gameStateOutputStreamBytes);
                                 }
                             }
                         default:

@@ -60,6 +60,9 @@ public class HelloController {
     private boolean isHost = false;
     private Boolean isNight;
 
+    private Map<Integer, Integer> translatePaneToPlayer = new HashMap<>();
+    private int translationCounter = 0;
+
 
     private List<DialogPane> playersDialog = new ArrayList<>();
     private int selectedPlayer = -1;
@@ -241,12 +244,14 @@ public class HelloController {
         textContent.setWrappingWidth(150);
         pane.setContent(textContent);
         pane.setId(String.valueOf(playersDialog.size()));
+        translatePaneToPlayer.put(translationCounter,player.getID());
+        translationCounter++;
         pane.setOnMouseClicked(event -> {       //todo dodać wypisywanie.
             System.out.println(player.getID());
             if(selectedPlayer<0) {
                 pane.setBackground(new Background(
                         new BackgroundFill(Color.web("#d45148"), CornerRadii.EMPTY, Insets.EMPTY)));
-                selectedPlayer = Integer.parseInt(pane.getId());
+                selectedPlayer = translatePaneToPlayer.get(Integer.parseInt(pane.getId()));
             }else if(selectedPlayer == Integer.parseInt(pane.getId()))
             {
                 pane.setBackground(new Background(
@@ -259,7 +264,7 @@ public class HelloController {
                 DialogPane selectedPane = playersDialog.get(selectedPlayer);
                 selectedPane.setBackground(new Background(
                         new BackgroundFill(Color.web("#ffffff"), CornerRadii.EMPTY, Insets.EMPTY)));
-                selectedPlayer = Integer.parseInt(pane.getId());
+                selectedPlayer = translatePaneToPlayer.get(Integer.parseInt(pane.getId()));
             }
         });
 
