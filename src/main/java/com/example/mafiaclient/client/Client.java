@@ -214,7 +214,10 @@ public class Client {
                                 }
                             });
                             break;
-
+                        case "10":
+                            boolean winner = Boolean.getBoolean(onlyMessage);
+                            controller.finishPopup(winner);
+                            break;
                         default:
                             break;
                     }

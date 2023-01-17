@@ -296,14 +296,14 @@ public class Server {
                     .map(Player::getRole)
                     .filter(role -> role.equals(RoleEnum.MAFIA)).count();
             if (mafiaAlivePlayers == 0) {
-                //???
+                out.println("10" + "false");
             }
             //jak wyżej
             long townAlivePlayers = playersList.stream()
                     .map(Player::getRole)
                     .filter(role -> role.equals(RoleEnum.DETECTIVE) || role.equals(RoleEnum.REGULAR)).count();
-            if (townAlivePlayers == 0) {
-                //???
+            if (townAlivePlayers == 1) {
+                out.println("10" + "true");
             }
         }
 

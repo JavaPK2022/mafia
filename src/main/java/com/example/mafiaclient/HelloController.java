@@ -221,12 +221,12 @@ public class HelloController {
         return true;
     }
 
-    private boolean finishPopup(boolean mafiaWon) throws IOException {
+    public boolean finishPopup(boolean mafiaWon) throws IOException {
         Scene scn = new Scene(new Group());
         Stage stage = new Stage();
         stage.setTitle("Finish");
         stage.setWidth(200);
-        stage.setHeight(100);
+        stage.setHeight(200);
         HBox hb = new HBox();
         Label lbl;
         if (mafiaWon){
