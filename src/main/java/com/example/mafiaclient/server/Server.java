@@ -18,6 +18,7 @@ public class Server {
     private AtomicBoolean gameStarted = new AtomicBoolean(false);
     private int playerCount = 0;
     private int playersVoted = 0;
+    private int mafiaCounter = 0;
     private Map<Integer, Integer> playerVoteMap = new HashMap<>();
     private final GameState gameState = new GameState();
 
@@ -109,9 +110,9 @@ public class Server {
         out.println("04GameAlreadyHasStarted");
     }
 
-    private void drawPlayers()
-    {
+    private void drawPlayers(ByteArrayOutputStream gameStateOutputStreamBytes) throws IOException {
         int numberOfMafiaPlayers = (int) Math.ceil(0.3*playerCount);
+        mafiaCounter = numberOfMafiaPlayers;
         Random random = new Random();
         List<RoleEnum> roleList = new ArrayList<>();
         for(int i = 0; i<playerCount; i++)
@@ -153,8 +154,11 @@ public class Server {
             for (ServerThread serverThread : serverThreadList) {
                 for (int i = 0; i < playerCount; i++) {
                     serverThread.sendPlayerUpdate(staticPlayerList.get(i));
+                    //ByteArrayOutputStream gameStateOutputStreamBytes = new ByteArrayOutputStream();
+                    //serverThread.sendGameState(gameStateOutputStreamBytes);
                 }
                 serverThread.finishPlayerUpdate();
+                serverThread.sendGameState(gameStateOutputStreamBytes);
                 //todo tutaj wysłać gamestate?
             }
         }
@@ -224,8 +228,8 @@ public class Server {
                     {
                         case "01":
                             gameStarted.set(true);
-                            drawPlayers();
-                            sendGameState(gameStateOutputStreamBytes);
+                            drawPlayers(gameStateOutputStreamBytes);
+
                             break;
                         case "02":
                             //sprawdzamy czy na pewno wartość z vote'a jest w aktywnych graczach
@@ -237,7 +241,7 @@ public class Server {
                                 playersVoted++;
                                 //jeśli liczba graczy którzy zagłosowali jest równa liczbie graczy dalej w grze
                                 //odrzucimy gracza z najweikszą liczbą głosów
-                                if (playersVoted == playersList.size()) {
+                                if ((playersVoted == playersList.size()) ||(gameState.isNight() && playersVoted == mafiaCounter)) {
                                     //sprawdzamy kto ma najwiecej głosów
                                     Optional<Map.Entry<Integer, Integer>> max = playerVoteMap.entrySet().stream()
                                             .max(Map.Entry.comparingByValue());
@@ -250,11 +254,12 @@ public class Server {
                                     playerVoteMap = new HashMap<>();
                                     playerToRemove.setRole(RoleEnum.DECEASED);
                                     playersList.remove(playerToRemove);
+                                    System.out.println("deleted player's id: "+playerToRemove.getID() +" "+playerToRemove.getNick());
                                     checkForGameEnd();
                                     gameState.toggleState();
                                     //wysyłamy dane na temat stanu gry i martwego gracza
                                     sendGameState(gameStateOutputStreamBytes);
-                                    sendPlayerUpdate(playerToRemove);
+                                    sendPlayerUpdate2(playerToRemove);
                                 }
                             }
                         default:
@@ -317,6 +322,22 @@ public class Server {
                 byte[] serializedPlayer = baos.toByteArray();
                 String serializedObject;// = baos.toString();
                 serializedObject = String.valueOf("06" + Base64.getEncoder().encodeToString(serializedPlayer));
+                out.println(serializedObject);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        public void sendPlayerUpdate2(Player player)
+        {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            try {
+                ObjectOutputStream oos = new ObjectOutputStream(baos);
+                oos.writeObject(player);
+
+                byte[] serializedPlayer = baos.toByteArray();
+                String serializedObject;// = baos.toString();
+                serializedObject = String.valueOf("09" + Base64.getEncoder().encodeToString(serializedPlayer));
                 out.println(serializedObject);
             } catch (IOException e) {
                 throw new RuntimeException(e);
