@@ -175,6 +175,11 @@ public class Server {
                 .findAny()
                 .orElse(null);
         //usuwamy gracza i zerujemy odpowiednie pola
+
+        if(playerToRemove.getRole()==RoleEnum.MAFIA)
+            mafiaCounter--;
+
+        playerCount--;
         playersVoted = 0;
         playerVoteMap = new HashMap<>();
         playerToRemove.setRole(RoleEnum.DECEASED);
@@ -292,18 +297,24 @@ public class Server {
         private void checkForGameEnd() {
             //TODO: zhandlowanie końca gry
             //jeśli żaden gracz z mafii nie żyje to zrób coś
-            long mafiaAlivePlayers = playersList.stream()
+            /*long mafiaAlivePlayers = playersList.stream()
                     .map(Player::getRole)
                     .filter(role -> role.equals(RoleEnum.MAFIA)).count();
-            if (mafiaAlivePlayers == 0) {
-                out.println("10" + "false");
+
+             */
+            if (mafiaCounter == 0) {
+                System.out.println("mafia lost server");
+                out.println("10false");
             }
             //jak wyżej
-            long townAlivePlayers = playersList.stream()
+            /*long townAlivePlayers = playersList.stream()
                     .map(Player::getRole)
                     .filter(role -> role.equals(RoleEnum.DETECTIVE) || role.equals(RoleEnum.REGULAR)).count();
-            if (townAlivePlayers == 1) {
-                out.println("10" + "true");
+
+             */
+            if (playerCount - mafiaCounter <= 1) {
+                System.out.println("mafia won server");
+                out.println("10true");
             }
         }
 

@@ -121,6 +121,7 @@ public class Client {
                     String messageType = message.substring(0, 2);
                     String onlyMessage = message.substring(2);
                     System.out.println("Client class - message only " +onlyMessage );
+                    System.out.println("Client class - message " +message );
 
                     //TODO: add more cases
                     switch (messageType) {
@@ -215,8 +216,19 @@ public class Client {
                             });
                             break;
                         case "10":
-                            boolean winner = Boolean.getBoolean(onlyMessage);
-                            controller.finishPopup(winner);
+                            boolean winner = Boolean.parseBoolean(onlyMessage);
+                            System.out.println("winner client "+winner);
+                            Platform.runLater(new Runnable() {
+                                @Override
+                                public void run() {
+                                    try {
+                                        controller.finishPopup(winner);
+                                    } catch (IOException e) {
+                                        throw new RuntimeException(e);
+                                    }
+                                }
+                            });
+
                             break;
                         default:
                             break;

@@ -136,7 +136,7 @@ public class HelloController {
             System.out.println(text.substring(0,text.length()-1));
             enterChatTextArea.clear();
 
-            if(this.isNight && !player.getRole().equals(RoleEnum.MAFIA)) {
+            if((this.isNight && !player.getRole().equals(RoleEnum.MAFIA)) ||(player.getRole().equals(RoleEnum.DECEASED))||(player.getRole().equals(RoleEnum.NOT_INITIALIZED))) {
 
                 DialogPane pane = new DialogPane();
                 Text textContent = new Text();
@@ -160,7 +160,7 @@ public class HelloController {
     public void updateChat(String msg)
     {
 
-        if(this.isNight && !player.getRole().equals(RoleEnum.MAFIA)) {
+        if((this.isNight && !player.getRole().equals(RoleEnum.MAFIA))  ||(player.getRole().equals(RoleEnum.DECEASED))||(player.getRole().equals(RoleEnum.NOT_INITIALIZED))) {
 
             return;
         }
