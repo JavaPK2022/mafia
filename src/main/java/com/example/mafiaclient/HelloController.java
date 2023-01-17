@@ -316,6 +316,7 @@ public class HelloController {
     private void setDayOrNight() {
         if(isNight){
             titleText.setText("Night");
+
         }
         else{
             titleText.setText("Day");
@@ -356,6 +357,8 @@ public class HelloController {
     }
 
     private void checkState(){
+
+        System.out.println("Player's role is "+ player.getRole());
        switch (player.getRole()){
            case MAFIA -> possibleAction = PossibleAction.VOTE;
            case DETECTIVE -> {

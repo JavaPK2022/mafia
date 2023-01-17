@@ -198,6 +198,22 @@ public class Client {
                                 }
                             });
                             break;
+                        case "09": //
+                            System.out.println(" client case 9 game state "+ currentState.isNight());
+                            byte[] bytesArray09 = Base64.getDecoder().decode(onlyMessage);
+                            bais = new ByteArrayInputStream(bytesArray09);
+                            ois = new ObjectInputStream(bais);
+                            receivedPlayer = (Player) ois.readObject();
+                            ois.close();
+                            playerList.set(receivedPlayer.getID(),receivedPlayer);
+                            System.out.println("deleted player's id: "+ receivedPlayer.getID()+" "+receivedPlayer.getNick());
+                            Platform.runLater(new Runnable() {
+                                @Override
+                                public void run() {
+                                    controller.updatePlayer(playerList);
+                                }
+                            });
+                            break;
 
                         default:
                             break;
