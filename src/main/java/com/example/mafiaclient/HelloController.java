@@ -135,9 +135,21 @@ public class HelloController {
             String text = enterChatTextArea.getText();
             System.out.println(text.substring(0,text.length()-1));
             enterChatTextArea.clear();
+
+            if(this.isNight && !player.getRole().equals(RoleEnum.MAFIA)) {
+
+                DialogPane pane = new DialogPane();
+                Text textContent = new Text();
+                textContent.setText("Nie mozesz teraz wysylac wiadomosci!");
+                pane.setContent(textContent);
+
+                chatView.getChildren().add(pane);
+
+                return;
+            }
             try {
 
-               client.sendMessageToChat(String.valueOf("01" + player.getNick()+ text.substring(0, text.length() - 1)));
+               client.sendMessageToChat(String.valueOf("01" + player.getNick()+": "+ text.substring(0, text.length() - 1)));
             }catch (Exception e)
             {
 
@@ -147,6 +159,11 @@ public class HelloController {
 
     public void updateChat(String msg)
     {
+
+        if(this.isNight && !player.getRole().equals(RoleEnum.MAFIA)) {
+
+            return;
+        }
         System.out.println("Hello cotroller, update chat");
 
         DialogPane pane = new DialogPane();
