@@ -1,6 +1,8 @@
 module com.example.mafiaclient {
     requires javafx.controls;
     requires javafx.fxml;
+    requires java.sql;
+
     //requires jfxrt;
     //requires rt;
 
@@ -11,4 +13,5 @@ module com.example.mafiaclient {
     opens com.example.mafiaclient.client to javafx.fxml;
     exports com.example.mafiaclient.server;
     opens com.example.mafiaclient.server to javafx.fxml;
+
 }

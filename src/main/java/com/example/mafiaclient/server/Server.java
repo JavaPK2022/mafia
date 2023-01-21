@@ -5,6 +5,8 @@ import com.example.mafiaclient.client.RoleEnum;
 
 import java.io.*;
 import java.net.*;
+import java.sql.*;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -295,6 +297,7 @@ public class Server {
         }
 
         private void checkForGameEnd() {
+            this.sendToDB(false);
             //TODO: zhandlowanie końca gry
             //jeśli żaden gracz z mafii nie żyje to zrób coś
             /*long mafiaAlivePlayers = playersList.stream()
@@ -305,6 +308,7 @@ public class Server {
             if (mafiaCounter == 0) {
                 System.out.println("mafia lost server");
                 out.println("10false");
+                this.sendToDB(false);
             }
             //jak wyżej
             /*long townAlivePlayers = playersList.stream()
@@ -315,8 +319,29 @@ public class Server {
             if (playerCount - mafiaCounter <= 1) {
                 System.out.println("mafia won server");
                 out.println("10true");
+                this.sendToDB(true);
             }
         }
+
+        private void sendToDB(boolean winner)  {
+            Connection connection = null;
+            try {
+                connection = DriverManager.getConnection("jdbc:mysql://localhost/mafia_db?" +
+                        "user=root&password=");
+
+                LocalDate date = LocalDate.now();
+                Statement stmt = connection.createStatement();
+                stmt.executeUpdate("INSERT INTO winners(winner, gameDate) VALUES(" + "mafia" + "," + date  + ")");
+
+                connection.close();
+                System.out.println("XDDDDDDDDDDDDDDDDDDDD");
+
+            } catch (SQLException exception) {
+                System.out.println(exception.getMessage());
+            }
+
+        }
+
 
         private void sendPlayer(Player player, ByteArrayOutputStream baos) throws IOException {
             ObjectOutputStream oos = new ObjectOutputStream(baos);
