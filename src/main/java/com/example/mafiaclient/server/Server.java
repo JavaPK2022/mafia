@@ -24,6 +24,8 @@ public class Server {
     private Map<Integer, Integer> playerVoteMap = new HashMap<>();
     private final GameState gameState = new GameState();
 
+    private AtomicBoolean databaseSet = new AtomicBoolean(false);
+
 
     public Server() throws IOException {
         group = InetAddress.getByName("230.0.0.0");
@@ -206,6 +208,34 @@ public class Server {
         }
     }
 
+    private void sendToDB(boolean winner)  {
+
+        if(databaseSet.get())
+            return;
+        Connection connection = null;
+        try {
+            connection = DriverManager.getConnection("jdbc:mysql://localhost/mafia_db?" +
+                    "user=root&password=");
+
+            LocalDate date = LocalDate.now();
+            Statement stmt = connection.createStatement();
+
+            if(winner)
+                stmt.executeUpdate("INSERT INTO winners(winner, gameDate) VALUES('mafia','" + date  + "')");
+            else
+                stmt.executeUpdate("INSERT INTO winners(winner, gameDate) VALUES('regulars','" + date  + "')");
+
+            connection.close();
+            System.out.println("database works");
+
+            databaseSet.set(true);
+
+        } catch (SQLException exception) {
+            System.out.println(exception.getMessage());
+        }
+
+    }
+
     private class ServerThread extends Thread{
 
         private final PrintWriter out;// = new PrintWriter(clientSocket.getOutputStream(), true);
@@ -297,7 +327,6 @@ public class Server {
         }
 
         private void checkForGameEnd() {
-            this.sendToDB(false);
             //TODO: zhandlowanie końca gry
             //jeśli żaden gracz z mafii nie żyje to zrób coś
             /*long mafiaAlivePlayers = playersList.stream()
@@ -308,7 +337,7 @@ public class Server {
             if (mafiaCounter == 0) {
                 System.out.println("mafia lost server");
                 out.println("10false");
-                this.sendToDB(false);
+                sendToDB(false);
             }
             //jak wyżej
             /*long townAlivePlayers = playersList.stream()
@@ -319,28 +348,11 @@ public class Server {
             if (playerCount - mafiaCounter <= 1) {
                 System.out.println("mafia won server");
                 out.println("10true");
-                this.sendToDB(true);
+                sendToDB(true);
             }
         }
 
-        private void sendToDB(boolean winner)  {
-            Connection connection = null;
-            try {
-                connection = DriverManager.getConnection("jdbc:mysql://localhost/mafia_db?" +
-                        "user=root&password=");
 
-                LocalDate date = LocalDate.now();
-                Statement stmt = connection.createStatement();
-                stmt.executeUpdate("INSERT INTO winners(winner, gameDate) VALUES(" + "mafia" + "," + date  + ")");
-
-                connection.close();
-                System.out.println("XDDDDDDDDDDDDDDDDDDDD");
-
-            } catch (SQLException exception) {
-                System.out.println(exception.getMessage());
-            }
-
-        }
 
 
         private void sendPlayer(Player player, ByteArrayOutputStream baos) throws IOException {
